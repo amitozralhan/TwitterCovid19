@@ -8,15 +8,6 @@ import pandas as pd
 import twitterConnectors
 
 
-class TweetAnalyzer():
-    def tweetToDataFrame(self, tweets):
-        df = pd.DataFrame(
-            data=[[tweet['full_text'], tweet['id'], len(tweet['full_text']), tweet['created_at'], tweet['user']['location'], tweet['coordinates']] for tweet in tweets], columns=['Tweets', 'id', 'len', 'date', 'userLocation', 'coordinates'])
-        # for tweet in tweets:
-        #     print(tweet['id'])
-        return df
-
-
 class TwitterClient():
     def __init__(self, twitter_user=None):
         self.auth = TwitterAuthenticator().authenticate()

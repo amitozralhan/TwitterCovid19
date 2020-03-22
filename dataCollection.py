@@ -72,10 +72,11 @@ class DBConnector():
         coll = self.mongoConnect(collection)
 
         d = coll.find({},
-                      {'created_at': 1, 'id': 1, 'full_text': 1, 'coordinates': 1, 'user': 1})  # .limit(1000)
+                      {'created_at': 1, 'id': 1, 'full_text': 1, 'coordinates': 1, 'user.location': 1})
 
         self.conn.close()
         return d
+# 'created_at':{'$regex': ".*Sat Mar 21.*"}
 
     def __init__(self, host, db, user, pwd):
         self.host = host
@@ -91,7 +92,7 @@ def collectData():
     twitterClient = twitterConnectors.TwitterClient()
     api = twitterClient.getTwitterClientApi()
     tweets = Cursor(api.search, q='(covid19 OR corona OR coronavirus OR #covid19 OR #coronavirus) AND (sick OR cough OR fever OR symptoms) -filter:retweets',
-                    lang="en", tweet_mode='extended', wait_on_rate_limit=True, wait_on_rate_limit_notify=True, count=1000).items(500)
+                    lang="en", tweet_mode='extended', wait_on_rate_limit=True, wait_on_rate_limit_notify=True, count=1000).items(50000)
 
     twitter_data_json = [tweet._json for tweet in tweets]
     # print(twitter_data_json)
