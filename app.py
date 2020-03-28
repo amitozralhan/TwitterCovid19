@@ -1,10 +1,15 @@
 from dataCollection import readRawTweets
-
-from vectorization import clusterData
 from flask import Flask
 import pandas as pd
+import numpy as np
+import os
+
+from MachineLearning import TrainClassifier, Predict
+from sklearn import metrics
+
 
 app = Flask(__name__)
+trainingDataFilePath = "TrainingData.tsv"
 
 
 @app.route('/')
@@ -16,36 +21,44 @@ class TweetAnalyzer():
     def tweetToDataFrame(self, tweets):
         df = pd.DataFrame(
             data=[[tweet['full_text'], tweet['id'], len(tweet['full_text']), tweet['created_at'], tweet['user']['location'], tweet['coordinates']] for tweet in tweets], columns=['Tweet', 'id', 'len', 'date', 'userLocation', 'coordinates'])
-        # for tweet in tweets:
-        #     print(tweet['id'])
+
         return df
 
-# def dataCleaner(data):
-
-#     print('data cleaning started')
-
-#     stop_words = set(stopwords.words('english'))
-#     ps = PorterStemmer()
-#     cleanData = []
-#     for row in data:
-#         word_tokens = word_tokenize(row[3])
-#         filtered_sentence = " ".join(
-#             [ps.stem(w) for w in word_tokens if not w in stop_words])
-#         cleanData.append((row[0], row[1], row[2], row[3], filtered_sentence))
-#     print('data cleaning completed')
-#     return cleanData
+    def readTrainingData(self, filepath):
+        data = pd.read_csv(filepath, sep="\t")
+        return data
 
 
 if __name__ == "__main__":
     # app.run()
-
-    data = readRawTweets()
-
     analyzer = TweetAnalyzer()
 
-    tweetDF = analyzer.tweetToDataFrame(data)
-    tweetExport = tweetDF[['id', 'Tweet']].sample(frac=0.01)
-    tweetExport.to_csv('TrainingData.csv', sep='\t',
-                       index=False, encoding='utf-8')
-    print(tweetExport)
-    # clusterData(tweetText)
+    trainingData = analyzer.readTrainingData(trainingDataFilePath)
+    trainingDataDF = df = pd.DataFrame(
+        trainingData, columns=["Classification", "Tweet", "Id"])
+
+    trainingDataDF["Classification"].loc[trainingDataDF["Classification"]
+                                         == "Infection"] = 1
+    trainingDataDF["Classification"].loc[trainingDataDF["Classification"]
+                                         == "Awareness"] = 0
+
+    trainingDataDF.drop(["Id"], axis=1, inplace=True)
+    trainingDataDF.dropna(inplace=True)
+
+    # print(trainingDataDF.groupby('Classification').count())
+
+    labels = trainingDataDF["Classification"].astype('int')
+
+    ClassificationModel = TrainClassifier(
+        trainingDataDF["Tweet"], labels)
+
+   # predictedClasses = Predict(ClassificationModel, trainingDataDF["Tweet"])
+   # print(metrics.confusion_matrix(labels, predictedClasses))
+
+    rawData = readRawTweets()
+    testDataDF = analyzer.tweetToDataFrame(rawData)
+    # print(testDataDF.head())
+    #predictedClasses = Predict(ClassificationModel, trainingDataDF["Tweet"])
+    predictedClasses = Predict(ClassificationModel, testDataDF["Tweet"])
+   # print(metrics.confusion_matrix(labels, predictedClasses))
+    print(np.count_nonzero(predictedClasses == 1))

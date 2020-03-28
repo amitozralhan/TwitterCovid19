@@ -72,7 +72,7 @@ class DBConnector():
         coll = self.mongoConnect(collection)
 
         d = coll.find({},
-                      {'created_at': 1, 'id': 1, 'full_text': 1, 'coordinates': 1, 'user.location': 1})
+                      {'created_at': 1, 'id': 1, 'full_text': 1, 'coordinates': 1, 'user.location': 1}).limit(100000)
 
         self.conn.close()
         return d
@@ -101,7 +101,7 @@ def collectData():
     twitterDB = DBConnector(config.DB_HOST, config.DATABASE,
                             config.DB_USER, config.DB_PASSWORD)
 
-    twitterDB.mongoInsert(twitter_data_json, "RawTweets")
+    twitterDB.mongoInsert(twitter_data_json, "AprilTweets")
 
 
 def readRawTweets():
@@ -109,11 +109,9 @@ def readRawTweets():
                             config.DB_USER, config.DB_PASSWORD)
 
     print('starting data read....')
-    start_time = time.time()
 
-    rawData = twitterDB.mongoRead("RawTweets")
-    end_time = time.time()
-    print(f'completed raw data read in {end_time-start_time}')
+    rawData = twitterDB.mongoRead("AprilTweets")
+
     return rawData
 
 
